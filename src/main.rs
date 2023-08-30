@@ -60,11 +60,12 @@ impl Buffer {
                     }
                 }
             }
-            let to_add_count = (width - data_line.len()).max(0);
+            let to_add_count = usize::checked_sub(width, data_line.len()).unwrap_or(0usize);
+
             data_line.extend(repeat(false).take(to_add_count));
             data.push(data_line);
         }
-        let to_add_count = (height - data.len()).max(0);
+        let to_add_count = usize::checked_sub(height, data.len()).unwrap_or(0usize);
         data.extend(repeat(vec![false; width]).take(to_add_count));
 
         return Ok(Buffer {

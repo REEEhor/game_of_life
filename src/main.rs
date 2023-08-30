@@ -1,3 +1,6 @@
+use std::error::Error;
+use std::fs;
+use std::iter::repeat;
 use std::mem::swap;
 
 fn wait_for_enter() {
@@ -16,12 +19,67 @@ impl Buffer {
         Buffer {
             width,
             height,
-            data: vec![vec![false; height]; width],
+            data: vec![vec![false; width]; height],
         }
     }
 
-    fn at(&mut self, x: usize, y: usize) -> &mut bool {
-        return &mut self.data[x][y];
+    fn with_dimensions_of(other: &Self) -> Self {
+        Buffer::new(other.width, other.height)
+    }
+
+    fn load_from_file(file_path: &str) -> Result<Self, Box<dyn Error>> {
+        let contents = fs::read_to_string(file_path)?;
+        let mut lines = contents.lines();
+        let first_line = lines.next().ok_or("Could not read the first line")?;
+        let mut values_on_first_line = first_line.split(' ');
+        let width = values_on_first_line
+            .next()
+            .ok_or("No width in file found")?
+            .parse::<usize>()?;
+
+        let height = values_on_first_line
+            .next()
+            .ok_or("No height in file found")?
+            .parse::<usize>()?;
+
+        let mut data = Vec::with_capacity(height);
+        //
+        for line in lines.take(height) {
+            let mut data_line = Vec::with_capacity(width);
+            //
+            for symbol in line.chars().take(width) {
+                match symbol {
+                    '@' => {
+                        data_line.push(true);
+                    }
+                    ' ' => {
+                        data_line.push(false);
+                    }
+                    invalid_symbol => {
+                        return Err(format!("Invalid symbol '{}'", invalid_symbol))?;
+                    }
+                }
+            }
+            let to_add_count = (width - data_line.len()).max(0);
+            data_line.extend(repeat(false).take(to_add_count));
+            data.push(data_line);
+        }
+        let to_add_count = (height - data.len()).max(0);
+        data.extend(repeat(vec![false; width]).take(to_add_count));
+
+        return Ok(Buffer {
+            width,
+            height,
+            data,
+        });
+    }
+
+    fn at_mut(&mut self, x: usize, y: usize) -> &mut bool {
+        return &mut self.data[y][x];
+    }
+
+    fn at(&self, x: usize, y: usize) -> bool {
+        return self.data[y][x];
     }
 
     fn neighbourhood_at(&self, x: usize, y: usize) -> i32 {
@@ -46,7 +104,7 @@ impl Buffer {
             if (x >= 0 && y >= 0) && (x < self.width as i32 && y < self.height as i32) {
                 let x = x as usize;
                 let y = y as usize;
-                result += self.data[x][y] as i32;
+                result += self.at(x, y) as i32;
             }
         }
 
@@ -75,34 +133,36 @@ fn update<'a>(current_buffer: &'a mut Buffer, prev_buffer: &'a mut Buffer) {
 
     for y in 0..height {
         for x in 0..width {
-            let is_alive = *prev_buffer.at(x, y);
+            let is_alive = *prev_buffer.at_mut(x, y);
             let neighbours = prev_buffer.neighbourhood_at(x, y);
 
             // rules from: https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life
-            *current_buffer.at(x, y) = (is_alive && (neighbours == 2 || neighbours == 3))
+            *current_buffer.at_mut(x, y) = (is_alive && (neighbours == 2 || neighbours == 3))
                 || (!is_alive && neighbours == 3);
         }
     }
 
-    swap(current_buffer,  prev_buffer);
+    swap(current_buffer, prev_buffer);
 }
 
-fn main() {
-    let width = 20;
-    let height = 20;
-    let mut buffer1: Buffer = Buffer::new(width, height);
-    let mut buffer2: Buffer = Buffer::new(width, height);
-    let mut current_buffer = &mut buffer1;
-    let mut prev_buffer = &mut buffer2;
+fn main() -> Result<(), Box<dyn Error>> {
+    // let width = 20;
+    // let height = 20;
+    // let mut buffer1: Buffer = Buffer::new(width, height);
+    // let mut buffer2: Buffer = Buffer::new(width, height);
 
-    let data = &mut prev_buffer.data;
+    let mut buffer1 = Buffer::load_from_file("input.txt")?;
+    let mut buffer2 = Buffer::with_dimensions_of(&buffer1);
+    let mut prev_buffer = &mut buffer1;
+    let mut current_buffer = &mut buffer2;
 
-    // generate glider
-    data[0][1] = true;
-    data[1][2] = true;
-    data[2][0] = true;
-    data[2][1] = true;
-    data[2][2] = true;
+    // // generate glider
+    // let data = &mut prev_buffer.data;
+    // data[0][1] = true;
+    // data[1][2] = true;
+    // data[2][0] = true;
+    // data[2][1] = true;
+    // data[2][2] = true;
 
     loop {
         update(&mut current_buffer, &mut prev_buffer);

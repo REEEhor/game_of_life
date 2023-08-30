@@ -147,23 +147,10 @@ fn update<'a>(current_buffer: &'a mut Buffer, prev_buffer: &'a mut Buffer) {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    // let width = 20;
-    // let height = 20;
-    // let mut buffer1: Buffer = Buffer::new(width, height);
-    // let mut buffer2: Buffer = Buffer::new(width, height);
-
     let mut buffer1 = Buffer::load_from_file("input.txt")?;
     let mut buffer2 = Buffer::with_dimensions_of(&buffer1);
     let mut prev_buffer = &mut buffer1;
     let mut current_buffer = &mut buffer2;
-
-    // // generate glider
-    // let data = &mut prev_buffer.data;
-    // data[0][1] = true;
-    // data[1][2] = true;
-    // data[2][0] = true;
-    // data[2][1] = true;
-    // data[2][2] = true;
 
     loop {
         update(&mut current_buffer, &mut prev_buffer);

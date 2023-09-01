@@ -1,11 +1,9 @@
 use std::error::Error;
 use std::fs;
 use std::iter::repeat;
-use std::mem::swap;
 
 fn wait_for_enter() {
-    let mut tmp = String::new();
-    let _ = std::io::stdin().read_line(&mut tmp);
+    let _ = std::io::stdin().read_line(&mut String::new());
 }
 
 struct Buffer {
@@ -128,33 +126,76 @@ impl Buffer {
     }
 }
 
-fn update<'a>(current_buffer: &'a mut Buffer, prev_buffer: &'a mut Buffer) {
-    let width = current_buffer.width;
-    let height = current_buffer.height;
+struct Simulation {
+    buffers: [Buffer; 2],
+    current_buffer_id: bool,
+}
 
-    for y in 0..height {
-        for x in 0..width {
-            let is_alive = *prev_buffer.at_mut(x, y);
-            let neighbours = prev_buffer.neighbourhood_at(x, y);
-
-            // rules from: https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life
-            *current_buffer.at_mut(x, y) = (is_alive && (neighbours == 2 || neighbours == 3))
-                || (!is_alive && neighbours == 3);
+impl Simulation {
+    #[allow(dead_code)]
+    fn new(width: usize, height: usize) -> Self {
+        Simulation {
+            buffers: [Buffer::new(width, height), Buffer::new(width, height)],
+            current_buffer_id: false,
         }
     }
 
-    swap(current_buffer, prev_buffer);
+    fn load_from_file(file_path: &str) -> Result<Self, Box<dyn Error>> {
+        let buffer1 = Buffer::load_from_file(file_path)?;
+        let buffer2 = Buffer::with_dimensions_of(&buffer1);
+
+        Ok(Simulation {
+            buffers: [buffer2, buffer1],
+            current_buffer_id: false,
+        })
+    }
+
+    fn current_buffer_mut(&mut self) -> &mut Buffer {
+        &mut self.buffers[self.current_buffer_id as usize]
+    }
+
+    fn current_buffer(&self) -> &Buffer {
+        &self.buffers[self.current_buffer_id as usize]
+    }
+
+    fn previous_buffer(&self) -> &Buffer {
+        &self.buffers[!self.current_buffer_id as usize]
+    }
+
+    fn swap_buffers(&mut self) {
+        self.current_buffer_id = !self.current_buffer_id;
+    }
+
+    fn update(&mut self) {
+        let width = self.current_buffer_mut().width;
+        let height = self.current_buffer_mut().height;
+
+        for y in 0..height {
+            for x in 0..width {
+                let is_alive = self.previous_buffer().at(x, y);
+                let neighbours = self.previous_buffer().neighbourhood_at(x, y);
+
+                // rules from: https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life
+                *self.current_buffer_mut().at_mut(x, y) = (is_alive
+                    && (neighbours == 2 || neighbours == 3))
+                    || (!is_alive && neighbours == 3);
+            }
+        }
+
+        self.swap_buffers();
+    }
+
+    fn print(&self) {
+        self.current_buffer().print();
+    }
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let mut buffer1 = Buffer::load_from_file("input.txt")?;
-    let mut buffer2 = Buffer::with_dimensions_of(&buffer1);
-    let mut prev_buffer = &mut buffer1;
-    let mut current_buffer = &mut buffer2;
+    let mut simulation = Simulation::load_from_file("input.txt")?;
 
     loop {
-        update(&mut current_buffer, &mut prev_buffer);
-        current_buffer.print();
+        simulation.update();
+        simulation.print();
         wait_for_enter();
     }
 }

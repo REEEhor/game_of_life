@@ -1,6 +1,5 @@
 pub mod buffer;
 use crate::simulation::buffer::Buffer;
-
 use std::error::Error;
 
 pub struct Simulation {

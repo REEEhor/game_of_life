@@ -62,6 +62,8 @@ impl Simulation {
     }
 
     pub fn print(&self) {
+        print!("\x1b[2J");
+        print!("\x1b[H");
         self.current_buffer().print();
     }
 }

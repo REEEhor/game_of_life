@@ -2,15 +2,15 @@ use std::error::Error;
 use std::fs;
 use std::iter::repeat;
 
-pub struct Buffer {
+pub struct Screen {
     width: usize,
     height: usize,
     data: Vec<Vec<bool>>,
 }
 
-impl Buffer {
+impl Screen {
     pub fn new(width: usize, height: usize) -> Self {
-        Buffer {
+        Screen {
             width,
             height,
             data: vec![vec![false; width]; height],
@@ -26,7 +26,7 @@ impl Buffer {
     }
 
     pub fn with_dimensions_of(other: &Self) -> Self {
-        Buffer::new(other.width, other.height)
+        Screen::new(other.width, other.height)
     }
 
     pub fn load_from_file(file_path: &str) -> Result<Self, Box<dyn Error>> {
@@ -70,7 +70,7 @@ impl Buffer {
         let to_add_count = usize::checked_sub(height, data.len()).unwrap_or(0usize);
         data.extend(repeat(vec![false; width]).take(to_add_count));
 
-        return Ok(Buffer {
+        return Ok(Screen {
             width,
             height,
             data,

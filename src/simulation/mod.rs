@@ -1,9 +1,9 @@
-pub mod buffer;
-use crate::simulation::buffer::Buffer;
+pub mod screen;
+use crate::simulation::screen::Screen;
 use std::error::Error;
 
 pub struct Simulation {
-    buffers: [Buffer; 2],
+    buffers: [Screen; 2],
     current_buffer_id: bool,
 }
 
@@ -11,14 +11,14 @@ impl Simulation {
     #[allow(dead_code)]
     pub fn new(width: usize, height: usize) -> Self {
         Simulation {
-            buffers: [Buffer::new(width, height), Buffer::new(width, height)],
+            buffers: [Screen::new(width, height), Screen::new(width, height)],
             current_buffer_id: false,
         }
     }
 
     pub fn load_from_file(file_path: &str) -> Result<Self, Box<dyn Error>> {
-        let buffer1 = Buffer::load_from_file(file_path)?;
-        let buffer2 = Buffer::with_dimensions_of(&buffer1);
+        let buffer1 = Screen::load_from_file(file_path)?;
+        let buffer2 = Screen::with_dimensions_of(&buffer1);
 
         Ok(Simulation {
             buffers: [buffer2, buffer1],
@@ -26,15 +26,15 @@ impl Simulation {
         })
     }
 
-    fn current_buffer_mut(&mut self) -> &mut Buffer {
+    fn current_buffer_mut(&mut self) -> &mut Screen {
         &mut self.buffers[self.current_buffer_id as usize]
     }
 
-    fn current_buffer(&self) -> &Buffer {
+    fn current_buffer(&self) -> &Screen {
         &self.buffers[self.current_buffer_id as usize]
     }
 
-    fn previous_buffer(&self) -> &Buffer {
+    fn previous_buffer(&self) -> &Screen {
         &self.buffers[!self.current_buffer_id as usize]
     }
 

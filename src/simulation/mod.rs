@@ -60,6 +60,13 @@ impl Simulation {
         self.buffers.push(new_buffer);
     }
 
+    pub fn precalculate_next_n(&mut self, n: usize) {
+        self.buffers.reserve(n);
+        for _ in 0..n {
+            self.calculate_next();
+        }
+    }
+
     pub fn step_backwards(&mut self) {
         if self.current_index > 0 {
             self.current_index -= 1;

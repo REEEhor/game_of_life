@@ -9,6 +9,7 @@ fn wait_for_enter() {
 fn main() -> Result<(), Box<dyn Error>> {
     let mut simulation = Simulation::load_from_file("input.txt")?;
 
+    simulation.precalculate_next_n(500);
     loop {
         simulation.step_forwards();
         simulation.print();

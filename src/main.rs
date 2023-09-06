@@ -10,7 +10,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut simulation = Simulation::load_from_file("input.txt")?;
 
     loop {
-        simulation.update();
+        simulation.step_forwards();
         simulation.print();
         wait_for_enter();
     }

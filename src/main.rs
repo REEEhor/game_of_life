@@ -68,7 +68,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 }
                 Action::PrecomputeNext(how_many) => {
                     should_print = false;
-                    println!("Precalculating {how_many} steps of simulaton...");
+                    println!("Precalculating additional {how_many} steps of simulaton...");
                     simulation.precalculate_next_n(how_many);
                     println!("Done!");
                 }
